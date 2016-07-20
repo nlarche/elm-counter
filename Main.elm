@@ -4,18 +4,26 @@ import Html exposing (..)
 import Html.Attributes exposing (..)
 import Html.Events exposing (..)
 import Html.App as App
+import String
 
 
 -- model
 
 
 type alias Model =
-    Int
+    { counter : Int
+    , input : Int
+    , error : Maybe String
+    }
 
 
 initModel : Model
 initModel =
-    0
+    -- Model 0 0 Nothing
+    { counter = 0
+    , input = 0
+    , error = Nothing
+    }
 
 
 
@@ -26,19 +34,40 @@ type Msg
     = AddCalorie
     | RemoveCalorie
     | Clear
+    | Input String
 
 
 update : Msg -> Model -> Model
 update msg model =
     case msg of
         AddCalorie ->
-            model + 1
+            { model
+                | counter = model.counter + model.input
+                , input = 0
+            }
 
         RemoveCalorie ->
-            model - 1
+            { model
+                | counter = model.counter - model.input
+                , input = 0
+            }
 
         Clear ->
             initModel
+
+        Input val ->
+            case String.toInt val of
+                Ok input ->
+                    { model
+                        | input = input
+                        , error = Nothing
+                    }
+
+                Err err ->
+                    { model
+                        | input = 0
+                        , error = Just err
+                    }
 
 
 
@@ -49,7 +78,19 @@ view : Model -> Html Msg
 view model =
     div []
         [ h3 []
-            [ text (("Total ") ++ (toString model)) ]
+            [ text (("Total ") ++ (toString model.counter)) ]
+        , input
+            [ type' "text"
+            , onInput Input
+            , value
+                (if model.input == 0 then
+                    ""
+                 else
+                    toString model.input
+                )
+            ]
+            []
+        , div [] [ text (Maybe.withDefault "" model.error) ]
         , button
             [ type' "button"
             , onClick AddCalorie
@@ -65,6 +106,7 @@ view model =
             , onClick Clear
             ]
             [ text "Clear" ]
+        , p [] [ text (toString model) ]
         ]
 
 
